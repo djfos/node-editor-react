@@ -1,8 +1,10 @@
 import React from "react"
 import Node from "./Node";
 import { StanderNode } from "../lib/StanderNode";
-import Socket from "../component/Socket"
-import { StanderSocket } from "../lib/StanderSocket";
+import { StanderSocketInput } from "../lib/StandertSocketInpu";
+import { StanderSocketOutput } from "../lib/StanderSocketOutput";
+import SocketInput from "./SocketInput";
+import SocketOutput from "./SocketOutput";
 interface IProps {
     node: MyNode
 }
@@ -12,8 +14,8 @@ export function Component({ node }: IProps) {
     return (
         <Node node={node} sockets={
             (<>
-                <Socket socket={node.in}></Socket>
-                <Socket socket={node.out}></Socket>
+                <SocketInput socket={node.input}></SocketInput>
+                <SocketOutput socket={node.output}></SocketOutput>
             </>
             )
         }>
@@ -25,23 +27,23 @@ export function Component({ node }: IProps) {
 
 export class MyNode extends StanderNode {
 
-    in: StanderSocket
-    out: StanderSocket
+    input: StanderSocketInput<any, any>
+    output: StanderSocketOutput<any, any>
 
     constructor() {
         super({})
         let ref = this
-        this.in = new StanderSocket({
+        this.input = new StanderSocketInput({
             x: 0,
             y: ref.height * 0.5,
-            type: "in",
+            foo: () => { },
             node: ref
         })
 
-        this.out = new StanderSocket({
+        this.output = new StanderSocketOutput({
             x: ref.width,
             y: ref.height * 0.5,
-            type: "out",
+
             node: ref
         })
     }

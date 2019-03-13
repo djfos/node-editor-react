@@ -13,21 +13,24 @@ interface IProps {
 export default function ({ children, node, sockets }: IProps) {
     const { dispatch } = useGlobal();
 
-    const { x, y, width, height } = node
+    const { x, y, width, height, id } = node
 
     return (
         <g transform={`translate(${x} ${y})`}>
-            <g>
-                {sockets}
-            </g>
             <foreignObject xmlns="http://www.w3.org/1999/xhtml"
 
                 width={width} height={height}
                 onMouseDown={add}>
                 <div>x:{x}</div>
                 <div>y:{y}</div>
+                <div>id:{id}</div>
                 {children}
             </foreignObject>
+
+            <g>
+                {sockets}
+            </g>
+
         </g >
 
     )

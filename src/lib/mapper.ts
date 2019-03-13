@@ -1,10 +1,11 @@
 import { StanderNode } from "./StanderNode";
 import { IStore } from "./type";
 import MyNode from "../component/MyNode";
-import { StanderSocket } from "./StanderSocket";
 import { EnvType } from "./hooks";
+import { StanderSocketOutput } from "./StanderSocketOutput";
+import { StanderSocketInput } from "./StandertSocketInpu";
 
-type env = EnvType<IStore>
+type env = EnvType<IStore> & { dispatch: typeof mapper }
 
 const mapper = {
     move: function (this: env, { target, mx, my }: {
@@ -24,28 +25,32 @@ const mapper = {
             nodeInstance: new MyNode.nodeClass()
         })
     },
-    prepareConnection: function (this: env, from: StanderSocket) {
-        this.rerender(false)
-        this.stroe.connectFunc = (to: StanderSocket) => {
-            if (from.type != "out" || to.type != "in")
+    prepareConnection: function (this: env, output: StanderSocketOutput<any, any>) {
+        console.log("prepareConnection");
+        this.stroe.connectFunc = (input) => {
+            if (!(output instanceof StanderSocketOutput && input instanceof StanderSocketInput))
                 return;
 
-            if (from.node === to.node)
+            if (output.node === input.node)
                 return;
 
-            from.connect(to)
+            input.connect(output)
+
+            console.log("performConnection");
+            console.log("from " + output.id + "to" + input.id);
+
         }
     },
-    performConnection: function (this: env, to: StanderSocket) {
+    performConnection: function (this: env, to: StanderSocketInput<any, any>) {
         if (this.stroe.connectFunc == null)
             return;
 
+        console.log("ready performConnection");
+        console.log(this.stroe.connectFunc);
         this.stroe.connectFunc(to)
     },
     abordConnection: function (this: env) {
-        this.rerender(false)
-        //give some time to connect
-        setTimeout(() => { this.stroe.connectFunc == null }, 500)
+        this.stroe.connectFunc = null
     },
 }
 

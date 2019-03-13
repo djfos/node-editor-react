@@ -5,5 +5,5 @@ import { TypedMapper } from "./hooks";
 
 export default createContext<{
     store: IStore
-    dispatch: TypedMapper<typeof mapper, IStore>
+    dispatch: TypedMapper<typeof mapper>
 } | null>(null);

@@ -1,5 +1,5 @@
 import { StanderNode } from "./StanderNode";
-import { StanderSocket } from "./StanderSocket";
+import { StanderSocketInput } from "./StandertSocketInpu";
 
 export interface INode {
     name: string,
@@ -9,7 +9,7 @@ export interface INode {
 
 export interface IStore {
     nodes: INode[]
-    connectFunc: ((to: StanderSocket) => void) | null
+    connectFunc: ((input: StanderSocketInput<any, any>) => void) | null
 }
 
 const initState: IStore = {
