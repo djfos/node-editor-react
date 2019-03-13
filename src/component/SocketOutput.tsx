@@ -10,7 +10,7 @@ interface IProps {
 }
 
 export default function ({ socket, r = 10 }: IProps) {
-    const { id } = socket
+    const { id, node } = socket
     const localX = socket.localX()
     const localY = socket.localY()
     const [line, start, setStart, setEnd] = useDragLine()
@@ -40,15 +40,15 @@ export default function ({ socket, r = 10 }: IProps) {
                 <text> id:{id}</text>
             </g>
 
-            {//for connection
-                socket.output != null ?
-                    <line x1={localX} y1={localY}
-                        x2={socket.output.globalX() - socket.node.x}
-                        y2={socket.output.globalY() - socket.node.y}
-                        stroke="black">
-                    </line> :
-                    null
-            }
+            {/* display connections */}
+            {socket.getOutput().map(s =>
+                (<line
+                    key={s.id}
+                    x1={localX} y1={localY}
+                    x2={s.globalX() - node.x}
+                    y2={s.globalY() - node.y}
+                    stroke="black">
+                </line>))}
 
             {/*  for drag animation */}
             {line}

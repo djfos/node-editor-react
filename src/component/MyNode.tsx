@@ -36,7 +36,6 @@ export class MyNode extends StanderNode {
         this.input = new StanderSocketInput({
             x: 0,
             y: ref.height * 0.5,
-            foo: () => { },
             node: ref
         })
 

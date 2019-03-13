@@ -26,28 +26,17 @@ const mapper = {
         })
     },
     prepareConnection: function (this: env, output: StanderSocketOutput<any, any>) {
-        console.log("prepareConnection");
         this.stroe.connectFunc = (input) => {
-            if (!(output instanceof StanderSocketOutput && input instanceof StanderSocketInput))
-                return;
+            if (output.node === input.node) return;
 
-            if (output.node === input.node)
-                return;
-
-            input.connect(output)
-
-            console.log("performConnection");
-            console.log("from " + output.id + "to" + input.id);
-
+            output.connect(input)
         }
     },
-    performConnection: function (this: env, to: StanderSocketInput<any, any>) {
+    performConnection: function (this: env, input: StanderSocketInput<any, any>) {
         if (this.stroe.connectFunc == null)
             return;
 
-        console.log("ready performConnection");
-        console.log(this.stroe.connectFunc);
-        this.stroe.connectFunc(to)
+        this.stroe.connectFunc(input)
     },
     abordConnection: function (this: env) {
         this.stroe.connectFunc = null

@@ -2,32 +2,39 @@ import { StanderNode } from "./StanderNode";
 import { StanderSocketInput } from "./StandertSocketInpu";
 import { Subject, Subscription } from "rxjs"
 
-let gid = 30;
+let gid = 3000;
 
 export class StanderSocketOutput<I, O> {
     private x: number;
     private y: number;
-
-    output: StanderSocketInput<O, any> | null = null;
+    private output: StanderSocketInput<any, any>[] = [];
     readonly node: StanderNode
     readonly id: number = gid++;
     subject: Subject<I>
     subscription: Subscription | null = null
-    constructor(obj: {
+
+    constructor({ x, y, node }: {
         x: number
         y: number
         node: StanderNode
     }) {
-        this.x = obj.x
-        this.y = obj.y
-
-        if (!obj.node)
-            throw new Error("undefind node")
-        this.node = obj.node
-
+        this.x = x
+        this.y = y
+        this.node = node
         this.subject = new Subject()
     }
 
+
+    connect(target: StanderSocketInput<O, any>) {
+        target.connect(this)
+        this.output.push(target)
+    }
+
+    disconnect(target: StanderSocketInput<O, any>) {
+        target.disconnect()
+        this.output = this.output.filter((s) => s !== target)
+
+    }
 
     globalX() {
         return this.x + this.node.x
@@ -41,6 +48,10 @@ export class StanderSocketOutput<I, O> {
     }
     localY() {
         return this.y
+    }
+
+    getOutput() {
+        return this.output
     }
 
 

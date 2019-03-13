@@ -10,26 +10,25 @@ interface IProps {
 }
 
 export default function ({ socket, r = 10 }: IProps) {
-    const { input, node, id } = socket
+    const { node, id } = socket
+    const input = socket.getInput()
     const localX = socket.localX()
     const localY = socket.localY()
     const { dispatch } = useGlobal()
-    const [line, startDrag, setStart, setEnd] = useDragLine()
+    const [line, start, setStart, setEnd] = useDragLine()
 
-    const startDrag1 = useDrag({
+    const startDrag = useDrag({
         down: () => {
             if (input != null) {
-
                 setStart(input.globalX() - node.x, input.globalY() - node.y)
                 setEnd(localX, localY)
+                input.disconnect(socket)
                 dispatch.prepareConnection(input)
-                input.output = null
-                socket.input = null
-
-                startDrag()
+                start()
             }
         },
         up: () => {
+            // make line invisible
             setStart(0, 0)
             setEnd(0, 0)
             dispatch.abordConnection()
@@ -59,7 +58,7 @@ export default function ({ socket, r = 10 }: IProps) {
         e.preventDefault()
         e.stopPropagation()
         if (input != null) {
-            startDrag1({})
+            startDrag({})
         }
     }
 

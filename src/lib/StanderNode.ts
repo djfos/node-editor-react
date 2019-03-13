@@ -1,5 +1,5 @@
 
-let gid = 0
+let gid = 1000
 
 export class StanderNode {
     x: number
