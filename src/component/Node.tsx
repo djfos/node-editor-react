@@ -1,7 +1,7 @@
 import React, { ReactNode } from "react"
 import "./global.css"
-import { useGlobal } from "../lib/hooks";
-import { StanderNode } from "../lib/StanderNode";
+import { useGlobal } from "../lib/hooks"
+import { StanderNode } from "../lib/StanderNode"
 
 
 interface IProps {
@@ -11,7 +11,7 @@ interface IProps {
 }
 
 export default function ({ children, node, sockets }: IProps) {
-    const { dispatch } = useGlobal();
+    const { dispatch } = useGlobal()
 
     const { x, y, width, height, id } = node
 
@@ -38,13 +38,7 @@ export default function ({ children, node, sockets }: IProps) {
     function move(e: MouseEvent) {
         e.preventDefault()
         e.stopPropagation()
-
-        dispatch.move({
-            target: node,
-            mx: e.movementX,
-            my: e.movementY
-        })
-
+        dispatch.move(node, e.movementX, e.movementY)
     }
 
     function clean() {

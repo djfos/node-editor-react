@@ -1,109 +1,77 @@
-import React, { useContext, useReducer, useMemo, useState, useCallback } from "react";
-import globalContext from "./globalContext"
+import React, { useContext, useReducer, useMemo, useState, useCallback } from "react"
+import { globalContext } from "./reducer"
+
+// ====================================================================================
 
 export function useGlobal() {
     const context = useContext(globalContext)
 
-    if (context == null)
+    if (context === null)
         throw new Error("global context is null")
 
     return context
 }
 
-//====================================================================================
+// ====================================================================================
+// rebuild a wheel after rematch :D
+
+interface Reducer<S> {
+    [key: string]: (state: S, ...arg: any[]) => any
+}
+
+export type TypedReducer<T extends Reducer<any>> = {
+    [K in keyof T]: T[K] extends ((state: any, ...arg: infer A) => infer R) ? (...arg: A) => R : never
+}
 
 interface Mapper {
     [key: string]: (this: any, ...arg: any[]) => any
 }
 
-type ParameterType<T extends (...arg: any[]) => any> = T extends (this: any, ...args: infer R) => any ? R : never
-// type ThisType<T extends (...arg: any[]) => any> = T extends (this: infer R, ...args: any[]) => any ? R : never
+export function useBetterReducer<M extends Mapper, S>(reducer: M, init: S): [S, TypedReducer<M>] {
+    const _reducer = useMemo<React.Reducer<S, any>>(() => (s, a) => {
+        return reducer[a.type].call(proxy, s, ...a.data)
+    }, [reducer, init])
 
-export type TypedMapper<M extends Mapper> = {
-    [K in keyof M]: (...arg: ParameterType<M[K]>) => ReturnType<M[K]>
-    // [K in keyof M]: M[K]
-}
+    const [store, dispatch] = useReducer(_reducer, init)
 
-export type EnvType<S> = {
-
-    stroe: S,
-
-    /**
-     * default true
-     */
-    rerender: (reredner: boolean) => void
-}
-
-export function useBetterReducer<M extends Mapper, S>(mapper: M, init: S): [S, TypedMapper<M>] {
-
-    const cleanMapper = useMemo<M>(() => {
-        return Object.setPrototypeOf(mapper, null)
-    }, [mapper])
-
-    const reducer = useMemo<React.Reducer<S, any>>(() => (s, a) => {
-        //not here imuteable
-        let reredner = true;
-        const env = {
-            stroe: s,
-            dispatch: proxy,
-            rerender: (reredner: boolean) => { reredner = reredner }
-        }
-
-        cleanMapper[a.type].apply(env, a.data)
-
-        return reredner ? Object.assign({}, s) : s
-    }, [cleanMapper])
-
-
-    const [store, dispatch] = useReducer(reducer, init)
-
-    const proxy = useMemo(() => new Proxy(cleanMapper, {
+    const proxy: any = useMemo(() => new Proxy(reducer, {
         get: function (target, name) {
             if (name in target) {
-
-
-                let a = function (...arg: any[]) {
-
-
+                return function (...arg: any[]) {
                     dispatch({
                         type: name,
                         data: arg
                     })
                 }
-
-                let b = a.bind(store)
-
-                return b;
-
             }
         }
-    }), [cleanMapper])
+    }), [reducer, init])
 
-    return [store, proxy];
+    return [store, proxy]
 }
-
-//==============================================================================
+// ==============================================================================
 
 const emptyfunc = () => { }
+
 export function useDrag<T>({
     move = emptyfunc,
     up = emptyfunc,
     down = emptyfunc,
 }: {
-    move?: (payload: T, e: MouseEvent) => void
-    up?: (payload: T, e: MouseEvent) => void
-    down?: (payload: T) => void
+    move?: (e: MouseEvent, payload?: T) => void
+    up?: (e: MouseEvent, payload?: T) => void
+    down?: (payload?: T) => void
 }) {
 
-    const start: (payload: T) => void = useCallback(function (arg) {
-        down(arg)
+    const start = useCallback(function (payload?: T) {
+        down(payload)
 
         const wrap = function (e: MouseEvent) {
-            move(arg, e)
+            move(e, payload)
         }
 
         const clean = function (e: MouseEvent) {
-            up(arg, e)
+            up(e, payload)
             document.removeEventListener("mousemove", wrap)
             document.removeEventListener("mouseup", clean)
         }
@@ -114,19 +82,19 @@ export function useDrag<T>({
     return start
 }
 
-//================================================================
+// ================================================================
 
-type setPointFunc = (a: number, b: number) => void
-export function useDragLine(
-): [JSX.Element, (...arg: any[]) => any, setPointFunc, setPointFunc] {
+type SetPointFunc = (a: number, b: number) => void
 
-    const [_startX, _setStartX] = useState(0);
-    const [_startY, _setStartY] = useState(0);
-    const [_endX, _setEndX] = useState(0);
-    const [_endY, _setEndY] = useState(0);
+export function useDragLine(): [JSX.Element, (...arg: any[]) => any, SetPointFunc, SetPointFunc] {
+
+    const [_startX, _setStartX] = useState(0)
+    const [_startY, _setStartY] = useState(0)
+    const [_endX, _setEndX] = useState(0)
+    const [_endY, _setEndY] = useState(0)
 
     const _start = useDrag({
-        move: (_, e) => {
+        move: (e, _) => {
             _setEndX(pre => pre + e.movementX)
             _setEndY(pre => pre + e.movementY)
         }
@@ -144,7 +112,6 @@ export function useDragLine(
 
     /*  for drag animation */
     const line = <line x1={_startX} y1={_startY} x2={_endX} y2={_endY} stroke="red" ></line >
-
 
     return [line, _start, setStartPoint, setEndPoint]
 }

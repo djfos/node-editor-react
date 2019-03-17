@@ -1,0 +1,26 @@
+{
+    "defaultSeverity": "warning",
+    // "extends": "tslint:recommended",
+    "rules": {
+        "no-console": {
+            "options": [
+                "log"
+            ]
+        },
+        "comment-format": {
+            "options": [
+                "check-space"
+            ]
+        },
+        "strict-type-predicates": true,
+        "strict-boolean-expressions": true,
+        "triple-equals": true,
+        "deprecation": true,
+        "semicolon": {
+            "options": "never"
+        }
+    },
+    "rulesDirectory": [
+        "src"
+    ]
+}

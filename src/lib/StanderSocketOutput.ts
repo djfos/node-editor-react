@@ -1,17 +1,17 @@
-import { StanderNode } from "./StanderNode";
-import { StanderSocketInput } from "./StandertSocketInpu";
-import { Subject, Subscription } from "rxjs"
+import { StanderNode } from "./StanderNode"
+import { StanderSocketInput } from "./StandertSocketInpu"
+import { Subject } from "rxjs"
 
-let gid = 3000;
+let gid = 3000
 
-export class StanderSocketOutput<I, O> {
-    private x: number;
-    private y: number;
-    private output: StanderSocketInput<any, any>[] = [];
+export class StanderSocketOutput<O=any> {
+    private x: number
+    private y: number
+    private output: StanderSocketInput[] = []
     readonly node: StanderNode
-    readonly id: number = gid++;
-    subject: Subject<I>
-    subscription: Subscription | null = null
+    readonly id: number = gid++
+    readonly subject: Subject<O>
+
 
     constructor({ x, y, node }: {
         x: number
@@ -24,16 +24,34 @@ export class StanderSocketOutput<I, O> {
         this.subject = new Subject()
     }
 
-
-    connect(target: StanderSocketInput<O, any>) {
-        target.connect(this)
-        this.output.push(target)
+    /**
+     * must be consisted with the gid in the declared file
+     * @param id 
+     */
+    static is(id: number) {
+        return id.toString()[0] === "3"
     }
 
-    disconnect(target: StanderSocketInput<O, any>) {
-        target.disconnect()
+    /**
+     * @deprecated
+     * never use this method directly !!!
+     * Only should be called inside an input socket calss !!!
+     */
+    connect(target: StanderSocketInput) {
+        this.output.push(target)
+    }
+    /**
+     * @deprecated
+     * never use this method directly !!!
+     * Only should be called inside an input socket calss !!!
+     */
+    disconnect(target: StanderSocketInput) {
         this.output = this.output.filter((s) => s !== target)
+    }
 
+
+    next(val: O) {
+        this.subject.next(val)
     }
 
     globalX() {

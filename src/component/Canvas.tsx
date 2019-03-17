@@ -1,19 +1,13 @@
 import React, { useState } from "react"
 import "./global.css"
-import GlobalContext from "../lib/globalContext";
-import { initState } from "../lib/type"
-import { useBetterReducer } from "../lib/hooks";
-import { mapper } from "../lib/mapper"
+import { useBetterReducer } from "../lib/hooks"
+import { reducer, initState, globalContext } from "../lib/reducer"
 
 export default function () {
-    const [store, dispatch] = useBetterReducer(mapper, initState)
+    const [store, dispatch] = useBetterReducer(reducer, initState)
 
     return (
-        <GlobalContext.Provider value={{
-            store,
-            dispatch,
-            connectFunc: null
-        }}>
+        <globalContext.Provider value={{ dispatch }}>
             <div tabIndex={0}
                 onKeyDown={e => {
                     switch (e.key) {
@@ -33,7 +27,7 @@ export default function () {
                     )}
                 </svg>
             </div>
-        </GlobalContext.Provider >
+        </globalContext.Provider >
     )
 }
 

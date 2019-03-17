@@ -1,12 +1,12 @@
 import React, { ReactNode, useState } from "react"
 import "./global.css"
-import { useGlobal, useDragLine, useDrag } from "../lib/hooks";
-import { StanderSocketOutput } from "../lib/StanderSocketOutput";
+import { useGlobal, useDragLine, useDrag } from "../lib/hooks"
+import { StanderSocketOutput } from "../lib/StanderSocketOutput"
 
 interface IProps {
     children?: ReactNode
     r?: number
-    socket: StanderSocketOutput<any, any>
+    socket: StanderSocketOutput
 }
 
 export default function ({ socket, r = 10 }: IProps) {
@@ -58,7 +58,7 @@ export default function ({ socket, r = 10 }: IProps) {
     function mouseDownHandler(e: React.MouseEvent) {
         e.preventDefault()
         e.stopPropagation()
-        startDrag({})
+        startDrag()
     }
 }
 
