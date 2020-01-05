@@ -1,6 +1,6 @@
 {
     "defaultSeverity": "warning",
-    // "extends": "tslint:recommended",
+    "extends": "tslint:recommended",
     "rules": {
         "no-console": {
             "options": [
@@ -14,6 +14,7 @@
         },
         "strict-type-predicates": true,
         "strict-boolean-expressions": true,
+        "no-use-before-define":false,
         "triple-equals": true,
         "deprecation": true,
         "semicolon": {

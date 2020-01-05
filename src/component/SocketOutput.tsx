@@ -1,65 +1,49 @@
 import React, { ReactNode, useState } from "react"
 import "./global.css"
-import { useGlobal, useDragLine, useDrag } from "../lib/hooks"
-import { StanderSocketOutput } from "../lib/StanderSocketOutput"
+import { StanderSocketOut } from "../lib/StanderSocketOutput"
+import { useGlobal } from "./Canvas"
+import { useDrag } from "src/lib/hooks"
 
-interface IProps {
-    children?: ReactNode
-    r?: number
-    socket: StanderSocketOutput
-}
 
-export default function ({ socket, r = 10 }: IProps) {
-    const { id, node } = socket
-    const localX = socket.localX()
-    const localY = socket.localY()
-    const [line, start, setStart, setEnd] = useDragLine()
-    const { dispatch } = useGlobal()
 
-    const startDrag = useDrag({
-        down: () => {
-            dispatch.prepareConnection(socket)
-            setStart(localX, localY)
-            setEnd(localX, localY)
-            start()
+export function SocketOut({ socket }: {
+    socket: StanderSocketOut<number>;
+}) {
+    const { x, y, id } = socket
+    const { store, dispatch } = useGlobal()
+
+    const [start] = useDrag({
+        down() {
+            dispatch.startLink(store, socket)
         },
-        up: () => {
-            setStart(0, 0)
-            setEnd(0, 0)
-            dispatch.abordConnection()
+        move: function (e, initX, initY, startX, startY) {
+            dispatch.psuedoLineMove(store, initX + e.clientX - startX, initY + e.clientY - startY)
+        },
+        up() {
+            dispatch.endLink(store)
         },
     })
 
     return (
         <g>
-            <g transform={`translate(${localX} ${localY})`}>
-                <circle cx={0} cy={0} r={r}
-                    onMouseDown={mouseDownHandler}
-                    className="socket"
-                > </circle>
-                <text> id:{id}</text>
+            <g transform={`translate(${x} ${y})`}>
+                <circle
+                    cx={0} cy={0} r={10}
+                    fill="yellow"
+                    fillOpacity={1.0}
+                    stroke="yellow"
+                    strokeWidth="20"
+                    strokeOpacity={1.0}
+                    strokeLinecap="round"
+                    onMouseDown={(e) => {
+                        start(e, socket.globalX(), socket.globalY())
+                    }}
+                ></circle>
+                {/* <text> id:{id}</text> */}
             </g>
-
-            {/* display connections */}
-            {socket.getOutput().map(s =>
-                (<line
-                    key={s.id}
-                    x1={localX} y1={localY}
-                    x2={s.globalX() - node.x}
-                    y2={s.globalY() - node.y}
-                    stroke="black">
-                </line>))}
-
-            {/*  for drag animation */}
-            {line}
         </g>
     )
 
-    function mouseDownHandler(e: React.MouseEvent) {
-        e.preventDefault()
-        e.stopPropagation()
-        startDrag()
-    }
 }
 
 

@@ -1,76 +1,37 @@
 import { StanderNode } from "./StanderNode"
-import { StanderSocketInput } from "./StandertSocketInpu"
-import { Subject } from "rxjs"
+import { StanderSocketIn } from "./StandertSocketInpu"
+import { BehaviorSubject, Subscription } from "rxjs"
 
 let gid = 3000
 
-export class StanderSocketOutput<O=any> {
-    private x: number
-    private y: number
-    private output: StanderSocketInput[] = []
+export class StanderSocketOut<T = any> {
+    x: number
+    y: number
+    target: StanderSocketIn<T> | null = null
+    readonly subject: BehaviorSubject<T>;
+    subscription: Subscription | null = null
     readonly node: StanderNode
+    readonly type = "out"
     readonly id: number = gid++
-    readonly subject: Subject<O>
 
 
-    constructor({ x, y, node }: {
-        x: number
-        y: number
-        node: StanderNode
+    constructor({ x, y, node, init }: {
+        x: number;
+        y: number;
+        node: StanderNode;
+        init: T;
     }) {
         this.x = x
         this.y = y
         this.node = node
-        this.subject = new Subject()
-    }
-
-    /**
-     * must be consisted with the gid in the declared file
-     * @param id 
-     */
-    static is(id: number) {
-        return id.toString()[0] === "3"
-    }
-
-    /**
-     * @deprecated
-     * never use this method directly !!!
-     * Only should be called inside an input socket calss !!!
-     */
-    connect(target: StanderSocketInput) {
-        this.output.push(target)
-    }
-    /**
-     * @deprecated
-     * never use this method directly !!!
-     * Only should be called inside an input socket calss !!!
-     */
-    disconnect(target: StanderSocketInput) {
-        this.output = this.output.filter((s) => s !== target)
-    }
-
-
-    next(val: O) {
-        this.subject.next(val)
+        this.subject = new BehaviorSubject(init)
     }
 
     globalX() {
-        return this.x + this.node.x
+        return this.node.x + this.x
     }
+
     globalY() {
-        return this.y + this.node.y
+        return this.node.y + this.y
     }
-
-    localX() {
-        return this.x
-    }
-    localY() {
-        return this.y
-    }
-
-    getOutput() {
-        return this.output
-    }
-
-
 }
