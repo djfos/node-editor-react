@@ -21,24 +21,12 @@ export function SocketOut({ socket }: {
             temp.y = y
             temp.pageX = x
             temp.pageY = y
-            dispatch.startLink(socket)
+            dispatch.onOutSocketDown(socket)
         },
         up() {
             dispatch.endLink()
         },
     })
-
-    // const [start] = useDrag({
-    //     down() {
-    //         dispatch.startLink(socket)
-    //     },
-    //     move: function (e, initX, initY, startX, startY) {
-    //         dispatch.psuedoLineMove(initX + e.clientX - startX, initY + e.clientY - startY)
-    //     },
-    //     up() {
-    //         dispatch.endLink()
-    //     },
-    // })
 
     return (
         <g>

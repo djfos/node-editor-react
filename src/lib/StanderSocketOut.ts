@@ -9,7 +9,7 @@ export class StanderSocketOut<T = any> {
     y: number
     target: StanderSocketIn<T> | null = null
     readonly subject: BehaviorSubject<T>;
-    subscription: Subscription | null = null
+    // subscription: Subscription | null = null
     readonly node: StanderNode
     readonly type = "out"
     readonly id: number = gid++

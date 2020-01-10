@@ -18,11 +18,11 @@ function clearLink({ links, start, end }: {
 }) {
     return links.filter(l => {
         if (start && start.id === l.start.id) {
-            l.start.subscription?.unsubscribe()
+            l.end.subscription?.unsubscribe()
             return false
         }
         if (end && end.id === l.end.id) {
-            l.start.subscription?.unsubscribe()
+            l.end.subscription?.unsubscribe()
             return false
         }
         return true
@@ -49,10 +49,7 @@ function useStore() {
                 nodes.push(new StanderNode({ x: 0, y: 0, type }))
                 setNodes([...nodes])
             },
-            startLink(target: StanderSocketOut) {
-                //clear target
-                linksRef.current = clearLink({ links: linksRef.current, start: target })
-                //set psuedoLine
+            onOutSocketDown(target: StanderSocketOut) {
                 const x = target.globalX()
                 const y = target.globalY()
                 setPsuedoLineStart({ x, y })
@@ -71,7 +68,7 @@ function useStore() {
                     //clear target
                     const links = clearLink({ links: linksRef.current, end: target })
                     //buid link
-                    start.subscription = start.subject.subscribe(target.subject)
+                    target.subscription = start.subject.subscribe(target.subject)
                     links.push({ start, end: target })
                     linksRef.current = links
                 }
@@ -84,6 +81,17 @@ function useStore() {
                     setPsuedoLineHide(true)
                 }, 20);
             },
+            findLink(target: StanderSocketIn) {
+                return linksRef.current.find(l => l.end.id === target.id)
+            },
+            onInSocketDown(link: Link) {
+                linksRef.current = clearLink({ links: linksRef.current, end: link.end })
+                setPsuedoLineStart({ x: link.start.globalX(), y: link.start.globalY() })
+                setPsuedoLineEnd({ x: link.end.globalX(), y: link.end.globalY() })
+                setPsuedoLineHide(false)
+                startRef.current = link.start
+            }
+
         }
     }, [])
     return [
