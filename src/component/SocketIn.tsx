@@ -1,6 +1,6 @@
 import React, { ReactNode, useState } from "react"
 import "./global.css"
-import { StanderSocketIn } from "../lib/StandertSocketInpu"
+import { StanderSocketIn } from "../lib/StandertSocketIn"
 import { useGlobal } from "./Canvas"
 
 
@@ -8,7 +8,7 @@ export function SocketIn({ socket }: {
     socket: StanderSocketIn<number>;
 }) {
     const { x, y, id } = socket
-    const { store, dispatch } = useGlobal()
+    const { reducer: dispatch } = useGlobal()
 
     return (
         <g>
@@ -21,7 +21,7 @@ export function SocketIn({ socket }: {
                     strokeWidth="20"
                     strokeOpacity={1.0}
                     strokeLinecap="round"
-                    onMouseUp={() => dispatch.doLink(store, socket)}
+                    onMouseUp={() => dispatch.doLink(socket)}
                 ></circle>
                 {/* <text> id:{id}</text> */}
             </g>

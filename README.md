@@ -1,14 +1,11 @@
-# hello world :D
-
 #  in DEV .......
 
 # what is this?
 
-## a  strong-type node editor framework(?)
+### a strong-type node editor
 
 # how to use?
 
-## (wondering...)
 ``` jsx
 import XXXXX...
 
@@ -42,10 +39,6 @@ export {
 
 ## svg + html by using \<foriegnObject\> inorder to reuse html components ,instead of drawing them with damn svgs
 
-# Contribute
-
-## I am a LAZY guy. (you get it)
-
 # License
 
-## do whatever you want 
+### MIT

@@ -1,43 +1,14 @@
-import React, { useState, createContext, useContext, useMemo } from "react"
+import React, { useState, createContext, useContext, useMemo, useRef } from "react"
 import "./global.css"
 import { StanderNode } from "src/lib/StanderNode"
 import { NumberGen, NumberDisplay } from "./Node"
-import { StanderSocketOut } from "src/lib/StanderSocketOutput"
-import { StanderSocketIn } from "src/lib/StandertSocketInpu"
+import { StanderSocketOut } from "src/lib/StanderSocketOut"
+import { StanderSocketIn } from "src/lib/StandertSocketIn"
 
 
 interface Link {
     start: StanderSocketOut;
     end: StanderSocketIn;
-
-}
-
-export interface Store {
-    nodes: StanderNode[];
-    start: StanderSocketOut | null;
-    // end: StanderSocketIn | null;
-    links: Link[];
-    psuedoLine: {
-        x1: number;
-        y1: number;
-        x2: number;
-        y2: number;
-        hide: boolean;
-    };
-}
-
-const initState: Store = {
-    nodes: [],
-    start: null,
-    // end: null,
-    links: [],
-    psuedoLine: {
-        x1: 0,
-        y1: 0,
-        x2: 0,
-        y2: 0,
-        hide: true,
-    }
 }
 
 function clearLink({ links, start, end }: {
@@ -60,72 +31,74 @@ function clearLink({ links, start, end }: {
 
 
 function useStore() {
-    const [store, _setStore] = useState(initState)
+    const [nodes, setNodes] = useState<StanderNode[]>([])
+    const linksRef = useRef<Link[]>([])
+    const startRef = useRef<StanderSocketOut | null>(null)
+    const [psuedoLineStart, setPsuedoLineStart] = useState({ x: 0, y: 0 })
+    const [psuedoLineEnd, setPsuedoLineEnd] = useState({ x: 0, y: 0 })
+    const [psuedoLineHide, setPsuedoLineHide] = useState(true)
 
-    const _reducer = useMemo(() => {
+    const reducer = useMemo(() => {
         return {
-            move(store: Store, node: StanderNode, x: number, y: number) {
+            move(node: StanderNode, x: number, y: number) {
                 node.x = x
                 node.y = y
-                _setStore(Object.assign({}, store))
+                setNodes([...nodes])
             },
-            addNode({ nodes }: Store, type: string): void {
+            addNode(type: string): void {
                 nodes.push(new StanderNode({ x: 0, y: 0, type }))
-                _setStore(Object.assign({}, store))
+                setNodes([...nodes])
             },
-            startLink({ psuedoLine }: Store, target: StanderSocketOut) {
+            startLink(target: StanderSocketOut) {
                 //clear target
-                store.links = clearLink({ links: store.links, start: target })
+                linksRef.current = clearLink({ links: linksRef.current, start: target })
                 //set psuedoLine
-                psuedoLine.x1 = target.globalX()
-                psuedoLine.y1 = target.globalY()
-                psuedoLine.x2 = target.globalX()
-                psuedoLine.y2 = target.globalY()
-                psuedoLine.hide = false
-
-                store.start = target
-                _setStore(Object.assign({}, store))
+                const x = target.globalX()
+                const y = target.globalY()
+                setPsuedoLineStart({ x, y })
+                setPsuedoLineEnd({ x, y })
+                setPsuedoLineHide(false)
+                startRef.current = target
             },
-            psuedoLineMove({ psuedoLine }: Store, x: number, y: number) {
-                psuedoLine.x2 = x
-                psuedoLine.y2 = y
-                _setStore(Object.assign({}, store))
+            psuedoLineMove(x: number, y: number) {
+                setPsuedoLineEnd({ x, y })
             },
-            doLink(store: Store, target: StanderSocketIn) {
-                console.log(store);
-
-                const { start } = store
+            doLink(target: StanderSocketIn) {
+                const start = startRef.current
                 if (start !== null && target !== null) {
+                    console.log("doLink");
+
                     //clear target
-                    store.links = clearLink({ links: store.links, end: target })
+                    const links = clearLink({ links: linksRef.current, end: target })
                     //buid link
-                    start.subscription = target.subject.subscribe(start.subject)
-                    store.links.push({ start, end: target })
+                    start.subscription = start.subject.subscribe(target.subject)
+                    links.push({ start, end: target })
+                    linksRef.current = links
                 }
-                store.start = null
-                store.psuedoLine.hide = true
-                setTimeout(() => {
-                    _setStore(Object.assign({}, store))
-                }, 20);
-
+                startRef.current = null
+                setPsuedoLineHide(true)
             },
-            endLink(store: Store) {
-                store.start = null
-                store.psuedoLine.hide = true
-                _setStore(Object.assign({}, store))
-
+            endLink() {
+                setTimeout(() => {
+                    startRef.current = null
+                    setPsuedoLineHide(true)
+                }, 20);
             },
         }
-    }, [store])
-    return [store, _reducer] as const
+    }, [])
+    return [
+        reducer,
+        nodes, linksRef, startRef,
+        psuedoLineStart, psuedoLineEnd, psuedoLineHide,
+    ] as const
 }
 
+
 //取tuple的第二个元素类型
-type PeekTuple2<T> = T extends readonly [unknown, infer R, ...unknown[]] ? R : never
+type PeekTupleFirst<T> = T extends readonly [infer R, ...unknown[]] ? R : never
 
 const globalContext = createContext<{
-    store: Store;
-    dispatch: PeekTuple2<ReturnType<typeof useStore>>;
+    reducer: PeekTupleFirst<ReturnType<typeof useStore>>;
 } | null>(null)
 
 
@@ -150,30 +123,37 @@ function match(type: string) {
 
 
 export function Canvas() {
-    const [store, dispatch] = useStore()
+
+    const [
+        reducer,
+        nodes, linksRef, startRef,
+        psuedoLineStart, psuedoLineEnd, psuedoLineHide,
+
+    ] = useStore()
+
 
     return (
-        <globalContext.Provider value={{ store, dispatch }}>
+        <globalContext.Provider value={{ reducer }}>
 
             <svg xmlns="http://www.w3.org/2000/svg"
                 className="border canvas"
                 tabIndex={0}
                 onKeyDown={e => {
                     switch (e.key) {
-                        case "a": dispatch.addNode(store, "number"); break
-                        case "b": dispatch.addNode(store, "display"); break
+                        case "a": reducer.addNode("number"); break
+                        case "b": reducer.addNode("display"); break
                     }
                 }}
             >
                 {
-                    store.psuedoLine.hide ? null :
+                    psuedoLineHide ? null :
                         React.createElement(
                             'line',
                             {
-                                x1: store.psuedoLine.x1,
-                                y1: store.psuedoLine.y1,
-                                x2: store.psuedoLine.x2,
-                                y2: store.psuedoLine.y2,
+                                x1: psuedoLineStart.x,
+                                y1: psuedoLineStart.y,
+                                x2: psuedoLineEnd.x,
+                                y2: psuedoLineEnd.y,
                                 stroke: "black",
                                 strokeWidth: "10",
                                 strokeOpacity: 1.0,
@@ -183,7 +163,7 @@ export function Canvas() {
                 }
 
                 {
-                    store.links.map(l => (
+                    linksRef.current.map(l => (
                         < line
                             x1={l.start.globalX()}
                             y1={l.start.globalY()}
@@ -193,12 +173,13 @@ export function Canvas() {
                             strokeWidth="10"
                             strokeOpacity={1.0}
                             strokeLinecap="round"
+                            key={"" + l.start.id + l.end.id}
                         ></line>
                     ))
                 }
 
                 {
-                    store.nodes.map((node) => {
+                    nodes.map((node) => {
                         return React.createElement(
                             match(node.type),
                             {

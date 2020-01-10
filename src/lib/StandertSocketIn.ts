@@ -1,19 +1,18 @@
 import { StanderNode } from "./StanderNode"
-import { StanderSocketIn } from "./StandertSocketInpu"
-import { BehaviorSubject, Subscription } from "rxjs"
+import { StanderSocketOut } from "./StanderSocketOut"
+import { Subscription, BehaviorSubject } from "rxjs"
 
-let gid = 3000
+let gid = 2000
 
-export class StanderSocketOut<T = any> {
+
+export class StanderSocketIn<T = any> {
     x: number
     y: number
-    target: StanderSocketIn<T> | null = null
-    readonly subject: BehaviorSubject<T>;
-    subscription: Subscription | null = null
+    target: StanderSocketOut<T> | null = null
+    readonly subject: BehaviorSubject<T>
     readonly node: StanderNode
-    readonly type = "out"
+    readonly type = "in"
     readonly id: number = gid++
-
 
     constructor({ x, y, node, init }: {
         x: number;

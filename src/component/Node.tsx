@@ -1,18 +1,18 @@
-import React, { ReactNode, useMemo } from "react"
+import React, { ReactNode, useMemo, useEffect, useState } from "react"
 import "./global.css"
 import { useGlobal } from "./Canvas"
 import { StanderNode } from "../lib/StanderNode"
-import { useDrag } from "src/lib/hooks"
-import { SocketOut } from "./SocketOutput"
-import { StanderSocketOut } from "src/lib/StanderSocketOutput"
-import { SocketIn } from "./SocketInput"
-import { StanderSocketIn } from "src/lib/StandertSocketInpu"
+import { useDrag } from "src/component/hooks"
+import { SocketOut } from "./SocketOut"
+import { StanderSocketOut } from "src/lib/StanderSocketOut"
+import { SocketIn } from "./SocketIn"
+import { StanderSocketIn } from "src/lib/StandertSocketIn"
 
 
 export function NumberGen({ node }: {
     node: StanderNode;
 }) {
-    const { store, dispatch } = useGlobal()
+    const { reducer: dispatch } = useGlobal()
     const width = 180
     const height = 180
     const { x, y, id } = node
@@ -21,9 +21,15 @@ export function NumberGen({ node }: {
         [node]
     )
 
-    const [start] = useDrag({
-        move: function (e, initX, initY, startX, startY) {
-            dispatch.move(store, node, initX + e.clientX - startX, initY + e.clientY - startY)
+    const [start] = useDrag({ x: 0, y: 0, pageX: 0, pageY: 0, }, {
+        move(e, temp) {
+            dispatch.move(node, temp.x + e.pageX - temp.pageX, temp.y + e.pageY - temp.pageY)
+        },
+        down(e, temp) {
+            temp.x = x
+            temp.y = y
+            temp.pageX = e.pageX
+            temp.pageY = e.pageY
         }
     })
 
@@ -33,13 +39,16 @@ export function NumberGen({ node }: {
                 width={width} height={height}
             >
                 <div className="border" style={{ width, height }} >
-                    <div onMouseDown={(e) => {
-                        start(e, x, y)
-                    }}>drag here</div>
+                    <div onMouseDown={start}>drag here</div>
                     <div>x:{x}</div>
                     <div>y:{y}</div>
                     <div>id:{id}</div>
-                    <input type="text" />
+                    <input type="text" onChange={(e) => {
+                        const n = Number(e.target.value)
+                        console.log(n);
+
+                        out.subject.next(n)
+                    }} />
                 </div>
 
             </foreignObject>
@@ -55,7 +64,7 @@ export function NumberDisplay({ children, node, sockets }: {
     sockets?: ReactNode;
     node: StanderNode;
 }) {
-    const { store, dispatch } = useGlobal()
+    const { reducer: dispatch } = useGlobal()
     const width = 180
     const height = 180
     const { x, y, id } = node
@@ -65,10 +74,23 @@ export function NumberDisplay({ children, node, sockets }: {
         [node]
     )
 
-    const [start] = useDrag({
-        move: function (e, initX, initY, startX, startY) {
-            dispatch.move(store, node, initX + e.clientX - startX, initY + e.clientY - startY)
+    const [start] = useDrag({ x: 0, y: 0, pageX: 0, pageY: 0, }, {
+        move(e, temp) {
+            dispatch.move(node, temp.x + e.pageX - temp.pageX, temp.y + e.pageY - temp.pageY)
+        },
+        down(e, temp) {
+            temp.x = x
+            temp.y = y
+            temp.pageX = e.pageX
+            temp.pageY = e.pageY
         }
+    })
+
+    const [number, setNumber] = useState(0)
+
+    useEffect(() => {
+        const sub = sIn.subject.subscribe(n => setNumber(n))
+        return () => sub.unsubscribe()
     })
 
     return (
@@ -77,13 +99,11 @@ export function NumberDisplay({ children, node, sockets }: {
                 width={width} height={height}
             >
                 <div className="border" style={{ width, height }} >
-                    <div onMouseDown={(e) => {
-                        start(e, x, y)
-                    }}>drag here</div>
+                    <div onMouseDown={start}>drag here</div>
                     <div>x:{x}</div>
                     <div>y:{y}</div>
                     <div>id:{id}</div>
-                    <div>number:{0}</div>
+                    <div>number:{number}</div>
                 </div>
             </foreignObject>
             <SocketIn socket={sIn}></SocketIn>
