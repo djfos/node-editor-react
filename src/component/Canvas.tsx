@@ -1,7 +1,7 @@
 import React, { useState, createContext, useContext, useMemo, useRef } from "react"
 import "./global.css"
 import { StanderNode } from "src/lib/StanderNode"
-import { NumberGen, NumberDisplay } from "./Node"
+import { NumberGen, NumberDisplay } from "./CustomNodes"
 import { StanderSocketOut } from "src/lib/StanderSocketOut"
 import { StanderSocketIn } from "src/lib/StandertSocketIn"
 
@@ -93,7 +93,7 @@ function useStore() {
             }
 
         }
-    }, [])
+    }, [nodes])
     return [
         reducer,
         nodes, linksRef, startRef,
@@ -134,9 +134,8 @@ export function Canvas() {
 
     const [
         reducer,
-        nodes, linksRef, startRef,
+        nodes, linksRef, ,
         psuedoLineStart, psuedoLineEnd, psuedoLineHide,
-
     ] = useStore()
 
 

@@ -1,44 +1,56 @@
-#  in DEV .......
+# (Under Development)
+# What is this?
 
-# what is this?
+### A typed node editor 
 
-### a strong-type node editor
+# How to use? (Envisage)
 
-# how to use?
+### put the canvas in
 
 ``` jsx
-import XXXXX...
+import {Canvas} from ...
 
-// template here
-function Component() {
-
-    return (
-            <xx>
-                xxx
-            </xx>
-        )
-}
-    
-// logic here
-
-class Xxxx {
-
+export default function App() {
+  return (
+    <Canvas></Canvas>
+  );
 }
 
-export {
-    name:"xxx",
-    template:Component
-    nodeclass:Xxxx
-}
-
-// pretty much like .vue file
+//TODO: need a menu to work
 
 ```
 
-# In depth
+### defind your own nodes
 
-## svg + html by using \<foriegnObject\> inorder to reuse html components ,instead of drawing them with damn svgs
+``` jsx
+import {useNode,useSocketOut,useSocketIn} from ...
 
-# License
 
-### MIT
+
+export function NumberGen(node: StanderNode) {
+    //put on where you want to darg node around
+    const [startNode] = useNode(node);
+    //put on where the socket are 
+    const [startSocket] = useSocketOut(sOut);
+
+  return (
+      <div onMouseDown={startNode}><div/>
+      <circle onMouseDown={startSocket}></circle>
+  );
+}
+
+export function Display(node: StanderNode) {
+    const [startNode] = useNode(node);
+    const [startSocket] = useSocketIn(sIn);
+
+  return (
+      <div onMouseDown={startNode}><div/>
+      <circle onMouseDown={startSocket}></circle>
+  );
+}
+
+```
+### see more detail in the CustomNodes.tsx under src/component
+# MIT License
+
+
