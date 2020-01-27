@@ -6,18 +6,11 @@ import { useDrag } from "./hooks"
 
 
 export function useSocketIn<T>(socket: StanderSocketIn<T>) {
-    const { x, y } = socket
     const { reducer: dispatch } = useGlobal()
 
-    const [start] = useDrag({ x: 0, y: 0, pageX: 0, pageY: 0, }, {
-        move(e, temp) {
-            dispatch.psuedoLineMove(temp.x + e.pageX - temp.pageX, temp.y + e.pageY - temp.pageY)
-        },
-        down(_, temp) {
-            temp.x = x
-            temp.y = y
-            temp.pageX = x
-            temp.pageY = y
+    const [start] = useDrag({
+        move(e) {
+            dispatch.psuedoLineMove(e.movementX, e.movementY)
         },
         up() {
             dispatch.endLink()

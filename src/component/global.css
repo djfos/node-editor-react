@@ -16,11 +16,6 @@ foreignObject {
     padding: 10px;
 }
 
-.canvas{
-    height: 100vh;
-    width: 100vw;
-}
-
 .socket{
     fill: black
 }

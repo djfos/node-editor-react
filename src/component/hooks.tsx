@@ -1,27 +1,27 @@
-import React, { useCallback, useState, useEffect } from "react"
+import React, { useCallback } from "react"
 
-export function useDrag<T>(temp: T, { move, up, down, }: {
-    move?: (e: MouseEvent, temp: T) => void;
-    up?: (e: MouseEvent, temp: T) => void;
-    down?: (e: React.MouseEvent, temp: T) => void;
+export function useDrag({ move, up, down, }: {
+    move?: (e: MouseEvent) => void;
+    up?: (e: MouseEvent) => void;
+    down?: (e: React.MouseEvent) => void;
 }) {
     const start = useCallback(function (e: React.MouseEvent) {
-        down?.(e, temp)
+        down?.(e)
 
         const wrap = function (e: MouseEvent) {
             e.preventDefault()
-            // e.stopPropagation()
-            move?.(e, temp)
+            e.stopPropagation()
+            move?.(e)
         }
 
         const clean = function (e: MouseEvent) {
-            up?.(e, temp)
+            up?.(e)
             document.removeEventListener("mousemove", wrap)
             document.removeEventListener("mouseup", clean)
         }
         document.addEventListener("mousemove", wrap)
         document.addEventListener("mouseup", clean)
-    }, [down, temp, move, up])
+    }, [down, move, up])
 
     return [start] as const
 }
