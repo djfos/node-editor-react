@@ -1,4 +1,4 @@
-import React, { useState, createContext, useContext, useMemo, useRef, useEffect } from "react"
+import React, { useState, createContext, useContext, useRef } from "react"
 import "./global.css"
 import { StanderNode } from "src/lib/StanderNode"
 import { NumberGen, NumberDisplay } from "./CustomNodes"
@@ -13,16 +13,8 @@ interface Link {
     end: StanderSocketIn;
 }
 
-function clearLink({ links, start, end }: {
-    links: Link[]; start?:
-    StanderSocketOut;
-    end?: StanderSocketIn;
-}) {
+function clearLink(links: Link[], end: StanderSocketIn) {
     return links.filter(l => {
-        if (start && start.id === l.start.id) {
-            l.end.subscription?.unsubscribe()
-            return false
-        }
         if (end && end.id === l.end.id) {
             l.end.subscription?.unsubscribe()
             return false
@@ -34,7 +26,7 @@ function clearLink({ links, start, end }: {
 
 function useStore() {
     const [nodes, setNodes] = useState<StanderNode[]>([])
-    const linksRef = useRef<Link[]>([])
+    const [links, setLinks] = useState<Link[]>([])
     const startRef = useRef<StanderSocketOut | null>(null)
     const [psuedoLineStart, setPsuedoLineStart] = useState({ x: 0, y: 0 })
     const [psuedoLineEnd, setPsuedoLineEnd] = useState({ x: 0, y: 0 })
@@ -43,76 +35,74 @@ function useStore() {
     const [translate, setTranslate] = useState({ x: 0, y: 0 })
     const [scale, setScale] = useState(1)
 
-    const reducer = useMemo(() => {
-        return {
-            moveNode(node: StanderNode, x: number, y: number) {
-                node.x += x
-                node.y += y
-                setNodes([...nodes])
-            },
-            addNode(type: string): void {
-                nodes.push(new StanderNode({ x: 0, y: 0, type }))
-                setNodes([...nodes])
-            },
-            onOutSocketDown(target: StanderSocketOut) {
-                setPsuedoLineStart({ x: target.globalX(), y: target.globalY() })
-                setPsuedoLineEnd({ x: target.globalX(), y: target.globalY() })
-                setPsuedoLineHide(false)
-                startRef.current = target
-            },
-            psuedoLineMove(deltaX: number, deltaY: number) {
-                console.log(scale);
+    const reducer = {
+        moveNode(node: StanderNode, x: number, y: number) {
+            node.x += x
+            node.y += y
+            setNodes([...nodes])
+        },
+        addNode(type: string): void {
+            nodes.push(new StanderNode({ x: 0, y: 0, type }))
+            setNodes([...nodes])
+        },
+        outSocketDown(target: StanderSocketOut) {
+            setPsuedoLineStart({ x: target.globalX(), y: target.globalY() })
+            setPsuedoLineEnd({ x: target.globalX(), y: target.globalY() })
+            setPsuedoLineHide(false)
+            startRef.current = target
+        },
+        movePsuedoLine(deltaX: number, deltaY: number) {
+            console.log(scale);
 
-                setPsuedoLineEnd(({ x, y }) => ({ x: x + deltaX / scale, y: y + deltaY / scale }))
-            },
-            doLink(target: StanderSocketIn) {
-                const start = startRef.current
-                if (start !== null && target !== null) {
-                    target.subscription = start.subject.subscribe(target.subject)
-                    linksRef.current.push({ start, end: target })
-                }
+            setPsuedoLineEnd(({ x, y }) => ({ x: x + deltaX / scale, y: y + deltaY / scale }))
+        },
+        doLink(target: StanderSocketIn) {
+            const start = startRef.current
+            if (start !== null && target !== null) {
+                target.subscription?.unsubscribe()
+                target.subscription = start.subject.subscribe(target.subject)
+                setLinks(l => [...l, { start, end: target }])
+            }
+            startRef.current = null
+            setPsuedoLineHide(true)
+        },
+        endLink() {
+            setTimeout(() => {
                 startRef.current = null
                 setPsuedoLineHide(true)
-            },
-            endLink() {
-                setTimeout(() => {
-                    startRef.current = null
-                    setPsuedoLineHide(true)
-                }, 20);
-            },
-            findLink(target: StanderSocketIn) {
-                return linksRef.current.find(l => l.end.id === target.id)
-            },
-            onInSocketDown(link: Link) {
-                linksRef.current = clearLink({ links: linksRef.current, end: link.end })
-                setPsuedoLineStart({ x: link.start.globalX(), y: link.start.globalY() })
-                setPsuedoLineEnd({ x: link.end.globalX(), y: link.end.globalY() })
-                setPsuedoLineHide(false)
-                startRef.current = link.start
-            },
-            translateView(deltaX: number, deltaY: number) {
-                setTranslate(({ x, y }) => ({ x: x + deltaX, y: y + deltaY }))
-            },
-            scaleView(delta: number) {
-                setScale(x => {
-                    const n = x + delta * 0.01
-                    if (n > 2) return 2
-                    if (n < 0.5) return 0.5
-                    return n
-                })
-            }
+            }, 20);
+        },
+        findLink(target: StanderSocketIn) {
+            return links.find(l => l.end.id === target.id)
+        },
+        inSocketDown(link: Link) {
+            setLinks(l => clearLink(l, link.end))
+            setPsuedoLineStart({ x: link.start.globalX(), y: link.start.globalY() })
+            setPsuedoLineEnd({ x: link.end.globalX(), y: link.end.globalY() })
+            setPsuedoLineHide(false)
+            startRef.current = link.start
+        },
+        translateView(deltaX: number, deltaY: number) {
+            setTranslate(({ x, y }) => ({ x: x + deltaX, y: y + deltaY }))
+        },
+        scaleView(delta: number) {
+            setScale(x => {
+                const n = x + delta * 0.01
+                if (n > 2) return 2
+                if (n < 0.5) return 0.5
+                return n
+            })
         }
-    }, [nodes, scale])
+    }
+
     return [
         reducer,
-        nodes, linksRef, startRef,
+        nodes, links, startRef,
         psuedoLineStart, psuedoLineEnd, psuedoLineHide,
         translate, scale
     ] as const
 }
 
-
-//取tuple的第二个元素类型
 type PeekTupleFirst<T> = T extends readonly [infer R, ...unknown[]] ? R : never
 
 const globalContext = createContext<{
@@ -144,7 +134,7 @@ export function Canvas() {
 
     const [
         reducer,
-        nodes, linksRef, ,
+        nodes, links, ,
         psuedoLineStart, psuedoLineEnd, psuedoLineHide,
         translate, scale
     ] = useStore()
@@ -159,10 +149,11 @@ export function Canvas() {
         <globalContext.Provider value={{ reducer }}>
 
             <svg xmlns="http://www.w3.org/2000/svg"
-                className="border canvas"
+                className="border"
                 style={{
                     width: 800,
                     height: 500,
+                    backgroundColor: "gray"
                 }}
                 tabIndex={0}
                 onKeyDown={e => {
@@ -201,7 +192,7 @@ export function Canvas() {
                     }
 
                     {
-                        linksRef.current.map(l => (
+                        links.map(l => (
                             < line
                                 x1={l.start.globalX()}
                                 y1={l.start.globalY()}

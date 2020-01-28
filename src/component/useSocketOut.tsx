@@ -11,10 +11,10 @@ export function useSocketOut<T>(socket: StanderSocketOut<T>) {
 
     const [start] = useDrag({
         move(e) {
-            dispatch.psuedoLineMove(e.movementX, e.movementY)
+            dispatch.movePsuedoLine(e.movementX, e.movementY)
         },
         down() {
-            dispatch.onOutSocketDown(socket)
+            dispatch.outSocketDown(socket)
         },
         up() {
             dispatch.endLink()

@@ -10,7 +10,7 @@ export function useSocketIn<T>(socket: StanderSocketIn<T>) {
 
     const [start] = useDrag({
         move(e) {
-            dispatch.psuedoLineMove(e.movementX, e.movementY)
+            dispatch.movePsuedoLine(e.movementX, e.movementY)
         },
         up() {
             dispatch.endLink()
@@ -20,7 +20,7 @@ export function useSocketIn<T>(socket: StanderSocketIn<T>) {
     const pickUp = useCallback((e: React.MouseEvent) => {
         const link = dispatch.findLink(socket)
         if (link === undefined) return
-        dispatch.onInSocketDown(link)
+        dispatch.inSocketDown(link)
         start(e)
     }, [dispatch, socket, start])
 
